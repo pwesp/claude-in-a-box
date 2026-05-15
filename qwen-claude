@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail  # exit on error, abort on unset variables, propagate pipe failures
+
+mkdir -p "$(pwd)/.claude"
+
+docker run -it --rm \
+  --network host \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/home/node \
+  -v /etc/passwd:/etc/passwd:ro \
+  -v /etc/group:/etc/group:ro \
+  -e ANTHROPIC_BASE_URL=http://localhost:11434 \
+  -e ANTHROPIC_AUTH_TOKEN=ollama \
+  -e ANTHROPIC_DEFAULT_OPUS_MODEL=qwen3-coder:30b \
+  -e ANTHROPIC_DEFAULT_SONNET_MODEL=qwen3-coder:30b \
+  -e ANTHROPIC_DEFAULT_HAIKU_MODEL=qwen3-coder:30b \
+  -v "$(pwd)":/workspace \
+  -v "$(pwd)/.claude":/home/node/.claude \
+  -v "$(pwd)/.claude.json":/home/node/.claude.json \
+  claude-qwen \
+  --dangerously-skip-permissions \
+  "$@"
