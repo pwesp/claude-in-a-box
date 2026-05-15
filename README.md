@@ -240,11 +240,11 @@ If you are running this on a shared server, the meaningful risks are: disk exhau
 
 ## 🔧 Troubleshooting
 
-`**qwen-claude` does nothing / exits immediately**
+- **`qwen-claude` does nothing / exits immediately**
 
 Make sure you completed Step 2 fully, including the `newgrp docker` step or logging out and back in. Running `docker ps` should work without `sudo` — if it says "permission denied", the group change hasn't taken effect yet.
 
-`**ollama: connection refused` or similar inside Claude Code**
+- **`ollama: connection refused` or similar inside Claude Code**
 
 The launch script assumes Ollama is listening on its default address (`localhost:11434`). If you've configured Ollama to use a different address, update the `ANTHROPIC_BASE_URL` line in the `qwen-claude` script accordingly.
 
@@ -262,6 +262,6 @@ Start it if needed:
 ollama serve
 ```
 
-**Theme picker or login screen appears every time**
+- **Theme picker or login screen appears every time**
 
 This means the `.claude.json` config file isn't being persisted. It should appear in your project directory after the first run. Check that you're launching from the same directory each time.
