@@ -4,6 +4,13 @@ Run [Claude Code](https://claude.ai/code) locally, backed by a free open-source 
 
 Claude Code gets access only to the directory you launch it from nothing else on your machine.
 
+Simply run:
+
+```
+$ cd /path/to/my-project
+$ qwen-claude
+```
+
 ---
 
 ## 🔍 How it works
