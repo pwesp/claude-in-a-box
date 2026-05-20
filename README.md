@@ -2,7 +2,7 @@
 
 Run [Claude Code](https://claude.ai/code) locally, backed by a free open-source model ([Qwen3-Coder](https://ollama.com/library/qwen3-coder) via [Ollama](https://ollama.com)), inside a Docker container.
 
-Claude Code gets access only to the directory you launch it from nothing else on your machine.
+Claude Code gets access only to the directory you launch it from and nothing else on your machine.
 
 Simply run:
 
@@ -149,7 +149,7 @@ docker build -t claude-qwen .
 
 This takes a minute or two the first time. Subsequent builds are fast because Docker caches the layers.
 
-The image is based on `[node:22-bookworm-slim](https://hub.docker.com/layers/library/node/22.22.2-bookworm-slim)`, the official Node.js image maintained by the Node.js Docker team, built on Debian Bookworm. We use it because Claude Code is a Node.js application and this image provides a minimal, well-maintained base. The `-slim` variant strips out things like compilers and documentation to keep the image size down.
+The image is based on [`node:22-bookworm-slim`](https://hub.docker.com/layers/library/node/22.22.2-bookworm-slim), the official Node.js image maintained by the Node.js Docker team, built on Debian Bookworm. We use it because Claude Code is a Node.js application and this image provides a minimal, well-maintained base. The `-slim` variant strips out things like compilers and documentation to keep the image size down.
 
 ### Step 6 - Run it
 
@@ -240,11 +240,11 @@ If you are running this on a shared server, the meaningful risks are: disk exhau
 
 ## 🔧 Troubleshooting
 
-- **`qwen-claude` does nothing / exits immediately**
+- `**qwen-claude` does nothing / exits immediately**
 
-Make sure you completed Step 2 fully, including the `newgrp docker` step or logging out and back in. Running `docker ps` should work without `sudo` — if it says "permission denied", the group change hasn't taken effect yet.
+Make sure you completed Step 2 fully, including the `newgrp docker` step or logging out and back in. Running `docker ps` should work without `sudo`. If it says "permission denied", the group change hasn't taken effect yet.
 
-- **`ollama: connection refused` or similar inside Claude Code**
+- `**ollama: connection refused` or similar inside Claude Code**
 
 The launch script assumes Ollama is listening on its default address (`localhost:11434`). If you've configured Ollama to use a different address, update the `ANTHROPIC_BASE_URL` line in the `qwen-claude` script accordingly.
 
