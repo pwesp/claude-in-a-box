@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     nano \
     htop \
+    python3 \
+    python3-pip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Give the pre-existing node user access to global npm directory for installs
