@@ -2,6 +2,7 @@
 set -euo pipefail  # exit on error, abort on unset variables, propagate pipe failures
 
 mkdir -p "$(pwd)/.claude"
+touch "$(pwd)/.claude.json"
 
 docker run -it --rm \
   --network host \
