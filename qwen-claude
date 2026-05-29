@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail  # exit on error, abort on unset variables, propagate pipe failures
 
+source "$(dirname "$0")/common.sh"
+
 mkdir -p "$(pwd)/.claude"
 [[ -f "$(pwd)/.claude.json" ]] || echo '{}' > "$(pwd)/.claude.json"
 
@@ -10,14 +12,14 @@ docker run -it --rm \
   -e HOME=/home/node \
   -v /etc/passwd:/etc/passwd:ro \
   -v /etc/group:/etc/group:ro \
-  -e ANTHROPIC_BASE_URL=http://localhost:11434 \
-  -e ANTHROPIC_AUTH_TOKEN=ollama \
-  -e ANTHROPIC_DEFAULT_OPUS_MODEL=qwen3-coder:30b \
-  -e ANTHROPIC_DEFAULT_SONNET_MODEL=qwen3-coder:30b \
-  -e ANTHROPIC_DEFAULT_HAIKU_MODEL=qwen3-coder:30b \
+  -e ANTHROPIC_BASE_URL="$OLLAMA_URL" \
+  -e ANTHROPIC_AUTH_TOKEN="$OLLAMA_AUTH_TOKEN" \
+  -e ANTHROPIC_DEFAULT_OPUS_MODEL="$MODEL" \
+  -e ANTHROPIC_DEFAULT_SONNET_MODEL="$MODEL" \
+  -e ANTHROPIC_DEFAULT_HAIKU_MODEL="$MODEL" \
   -v "$(pwd)":/workspace \
   -v "$(pwd)/.claude":/home/node/.claude \
   -v "$(pwd)/.claude.json":/home/node/.claude.json \
-  claude-qwen \
+  "$IMAGE_NAME" \
   --dangerously-skip-permissions \
   "$@"

@@ -45,13 +45,16 @@ Your chat history, settings, and preferences are saved alongside your project so
 ```
 
 
-| Component          | Role                                                                          |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `Dockerfile`       | Builds the image: Node 22 slim + Claude Code installed globally               |
-| `assets/CLAUDE.md` | Model guidance baked into the image at `/home/node/.claude/CLAUDE.md`         |
-| `qwen-claude`      | Launch script: mounts your project, wires up Ollama, handles user permissions |
-| `.claude/`         | Persisted per-project: sessions, history, project config                      |
-| `.claude.json`     | Persisted globally: theme, preferences                                        |
+| Component               | Role                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `Dockerfile`            | Builds the image: Node 22 slim + Claude Code installed globally               |
+| `assets/CLAUDE.md`      | Model guidance baked into the image at `/home/node/.claude/CLAUDE.md`         |
+| `qwen-claude`           | Launch script: mounts your project, wires up Ollama, handles user permissions |
+| `config.env`            | Top-level config: which preset to use, image name, Ollama URL                 |
+| `common.sh`             | Shared config loader sourced by `qwen-claude`                                 |
+| `model_presets/*.env`   | Per-model settings: model tag + recommended Ollama knobs                      |
+| `.claude/`              | Persisted per-project: sessions, history, project config                      |
+| `.claude.json`          | Persisted globally: theme, preferences                                        |
 
 
 The script runs Docker as your own user so that files Claude creates in your project are owned by you, not by root.
@@ -190,7 +193,14 @@ qwen-claude
 
 ### Switching models
 
-If you want to use a different Ollama model, edit the three `ANTHROPIC_DEFAULT_*_MODEL` lines in the `qwen-claude` launch script to match the exact tag shown by `ollama list`. No image rebuild needed.
+Change the `PRESET` line in `config.env` to point at a different file in `model_presets/`. No rebuild needed.
+
+| Preset | Model | VRAM | Context | Notes |
+|---|---|---|---|---|
+| `qwen3-coder-30b` | `qwen3-coder:30b` | ~20 GB | 32 K | Default. Fits a 48 GB GPU comfortably. |
+| `qwen3-coder-next-80b` | `qwen3-coder-next:q4_K_M` | ~52 GB | 64 K | For an 80 GB H100. Leaves ~28 GB for KV cache (q8_0). Needs a recent Ollama for the hybrid-attention arch. |
+
+To add your own preset, create `model_presets/<name>.env` with a `MODEL=` line and any `OLLAMA_*` knobs, then set `PRESET=<name>` in `config.env`.
 
 ### Updating Claude Code
 
