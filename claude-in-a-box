@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail  # exit on error, abort on unset variables, propagate pipe failures
+
+source "$(dirname "$0")/common.sh"
+
+mkdir -p "$(pwd)/.claude"
+# Without the seed, Claude Code runs first-time onboarding (theme, login) per project.
+# Going through onboarding lead to browser authentication but we want long-term token.
+[[ -f "$(pwd)/.claude.json" ]] || echo '{"hasCompletedOnboarding":true}' > "$(pwd)/.claude.json"
+
+# Per-provider wiring. Everything else about the container is identical.
+case "$PROVIDER" in
+  ollama)
+    # Point Claude Code at the host's Ollama and pin every tier to the one local
+    # model, so /model can't silently select a tier Ollama isn't serving.
+    provider_args=(
+      # Share the host's network so localhost:11434 reaches Ollama. This exposes every
+      # other host service too — acceptable only because nothing this model reads leaves.
+      --network host
+      -e ANTHROPIC_BASE_URL="$OLLAMA_URL"
+      -e ANTHROPIC_AUTH_TOKEN="$OLLAMA_AUTH_TOKEN"
+      -e ANTHROPIC_DEFAULT_OPUS_MODEL="$MODEL"
+      -e ANTHROPIC_DEFAULT_SONNET_MODEL="$MODEL"
+      -e ANTHROPIC_DEFAULT_HAIKU_MODEL="$MODEL"
+    )
+    ;;
+  anthropic)
+    # No model env: the model is chosen at runtime with /model or --model.
+    provider_args=(
+      # Default bridge network, deliberately not --network host: everything Claude
+      # reads is sent to the API, so it must not reach host services (databases etc).
+      -e CLAUDE_CODE_OAUTH_TOKEN   # value from the environment, never the cmdline
+      # Shadow baked CLAUDE.md with guidance for less capable open-source Ollama models.
+      -v /dev/null:/etc/claude-code/CLAUDE.md:ro
+    )
+    ;;
+esac
+
+docker run -it --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/home/node \
+  -v /etc/passwd:/etc/passwd:ro \
+  -v /etc/group:/etc/group:ro \
+  "${provider_args[@]}" \
+  -v "$(pwd)":/workspace \
+  -v "$(pwd)/.claude":/home/node/.claude \
+  -v "$(pwd)/.claude.json":/home/node/.claude.json \
+  "$IMAGE_NAME" \
+  --dangerously-skip-permissions \
+  "$@"
