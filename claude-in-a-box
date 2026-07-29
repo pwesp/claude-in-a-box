@@ -3,10 +3,22 @@ set -euo pipefail  # exit on error, abort on unset variables, propagate pipe fai
 
 source "$(dirname "$0")/common.sh"
 
-mkdir -p "$(pwd)/.claude"
+# Physical path: a cwd reached through a symlink must not slip past the check below,
+# since docker resolves the mount source itself.
+WORKSPACE="$(pwd -P)"
+
+# The workspace is handed to the container wholesale, so a run from the wrong directory
+# mounts far more than a project. Require at least one level below $HOME: that admits
+# ~/projects and ~/projects/foo while rejecting /, /data, /home and $HOME itself.
+case "$WORKSPACE" in
+  "$HOME"/*) ;;
+  *) echo "claude-in-a-box: refusing to mount $WORKSPACE as /workspace — run from a directory at least one level below $HOME (e.g. $HOME/projects/my-project)" >&2; exit 1 ;;
+esac
+
+mkdir -p "$WORKSPACE/.claude"
 # Without the seed, Claude Code runs first-time onboarding (theme, login) per project.
 # Going through onboarding lead to browser authentication but we want long-term token.
-[[ -f "$(pwd)/.claude.json" ]] || echo '{"hasCompletedOnboarding":true}' > "$(pwd)/.claude.json"
+[[ -f "$WORKSPACE/.claude.json" ]] || echo '{"hasCompletedOnboarding":true}' > "$WORKSPACE/.claude.json"
 
 # Per-provider wiring. Everything else about the container is identical.
 case "$PROVIDER" in
@@ -42,9 +54,9 @@ docker run -it --rm \
   -v /etc/passwd:/etc/passwd:ro \
   -v /etc/group:/etc/group:ro \
   "${provider_args[@]}" \
-  -v "$(pwd)":/workspace \
-  -v "$(pwd)/.claude":/home/node/.claude \
-  -v "$(pwd)/.claude.json":/home/node/.claude.json \
+  -v "$WORKSPACE":/workspace \
+  -v "$WORKSPACE/.claude":/home/node/.claude \
+  -v "$WORKSPACE/.claude.json":/home/node/.claude.json \
   "$IMAGE_NAME" \
   --dangerously-skip-permissions \
   "$@"
